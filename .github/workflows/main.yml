@@ -39,8 +39,8 @@ jobs:
 #     - name: update ant home
 #       run:  export ANT_HOME=/home/runner/apache-ant-1.9.15
 
-    - name: update ant version to 1.9.15
-      run:  sudo cp -a apache-ant-1.9.15/. $ANT_HOME
+    - name: update ant version to 1.9.9
+      run:  sudo cp -a apache-ant-1.9.9/. $ANT_HOME
       #run:  mv apache-ant-1.9.15 $ANT_HOME
 
     - name: ant home check 2
