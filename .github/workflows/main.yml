@@ -15,11 +15,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
-    - name: Set up JDK 6
-    - uses: joschi/setup-jdk@v2
+    - name: setup jdk 6
+      uses: joschi/setup-jdk@v2
       with:
-        java-version: '8' # The OpenJDK version to make available on the path
-        architecture: 'x64' # defaults to 'x64'  
+        java-version: '8'
 
     - name: build java
       run: java -version
