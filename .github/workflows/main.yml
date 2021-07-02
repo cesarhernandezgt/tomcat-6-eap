@@ -31,7 +31,7 @@ jobs:
       run: unzip ant9.zip
 
     - name: update ant home
-      run:  export ANT_HOME=~/apache-ant-1.9.15
+      run:  export ANT_HOME=/home/runner/apache-ant-1.9.15
       
     - name: build Ant
       run: ant -version
