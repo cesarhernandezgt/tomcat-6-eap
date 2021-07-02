@@ -36,7 +36,7 @@ jobs:
 #       run:  export ANT_HOME=/home/runner/apache-ant-1.9.15
 
     - name: update ant version to 1.9.15
-      run:  mv apache-ant-1.9.15 $ANT_HOME
+      run:  mv apache-ant-1.9.15 ${ANT_HOME}
 
     - name: ant home check 2
       run: echo $ANT_HOME && ls $ANT_HOME
