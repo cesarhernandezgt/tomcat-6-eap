@@ -39,8 +39,20 @@ jobs:
       run: ant
 
     - name: ant_test
+#       id: ante_test_result
       run: ant test
     
-    - name: ant_collect_results
+    - if: failure()
       run: grep "Caused an ERROR" output/build/logs/*
+    
+#     - name: Check coverage tolerance
+#       if: ${{ steps.ante_test_result.outputs.lineRate < 0.9 }}
+#       uses: actions/github-script@v3
+#       with:
+#         script: |
+#           core.setFailed('Coverage test below tolerance')
+
+  
+#     - name: ant_collect_results
+#       run: grep "Caused an ERROR" output/build/logs/*
       
