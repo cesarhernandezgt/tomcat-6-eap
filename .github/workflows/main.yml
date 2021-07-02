@@ -50,3 +50,6 @@ jobs:
       
     - name: extract libraries
       run: tar -zxf tomcat-build-libs.tar.gz && ls
+
+    - name: build ant
+      run: ant
