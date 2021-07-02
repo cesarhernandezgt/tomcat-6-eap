@@ -24,8 +24,12 @@ jobs:
     - name: build java
       run: java -version
     
+#     - name: donwload ant 9
+#       run: curl https://downloads.apache.org/ant/binaries/apache-ant-1.9.15-bin.zip --output ant9.zip
+
     - name: donwload ant 9
-      run: curl https://downloads.apache.org/ant/binaries/apache-ant-1.9.15-bin.zip --output ant9.zip
+      run: curl https://archive.apache.org/dist/ant/binaries/apache-ant-1.9.9-bin.zip --output ant9.zip
+
 
     - name: unzip ant 9
       run: unzip ant9.zip && pwd
@@ -42,7 +46,7 @@ jobs:
     - name: ant home check 2
       run: echo $ANT_HOME && ls $ANT_HOME
 
-    - name: build Ant
+    - name: build version check
       run: ant -version
 
 #     - name: download libraries
@@ -57,11 +61,11 @@ jobs:
     - name: extract libs
       run: unzip tomcat6-build-libs-.zip && ls tomcat-build-libs
 
-    - name: update libs in property file
-      run:  sed 's:base.path=${user.home}/tomcat-build-libs:base.path=/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/tomcat-build-libs:' build.properties.default
+#     - name: update libs in property file
+#       run:  sed 's:base.path=${user.home}/tomcat-build-libs:base.path=/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/tomcat-build-libs:' build.properties.default
 
-    - name: check 4
-      run: ls /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/tomcat-build-libs
-    
+#     - name: check 4
+#       run: ls /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/tomcat-build-libs
+        
     - name: build ant
       run: ant
