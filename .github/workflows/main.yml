@@ -27,5 +27,8 @@ jobs:
     - name: donwload ant 9
       run: curl https://downloads.apache.org/ant/binaries/apache-ant-1.9.15-bin.zip --output ant9.zip
 
+    - name: unzip ant 9
+      run: unzip ant9.zip
+
     - name: build Ant
       run: ant -version
