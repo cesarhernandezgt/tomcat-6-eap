@@ -15,6 +15,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - name: Set up JDK 6
     - uses: joschi/setup-jdk@v2
       with:
         java-version: '6' # The OpenJDK version to make available on the path
