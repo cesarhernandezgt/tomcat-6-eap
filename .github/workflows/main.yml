@@ -18,7 +18,7 @@ jobs:
     - name: setup jdk 6
       uses: joschi/setup-jdk@v2
       with:
-        java-version: '8'
+        java-version: '6'
 
     - name: build java
       run: java -version
