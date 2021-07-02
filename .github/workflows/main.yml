@@ -28,13 +28,18 @@ jobs:
       run: curl https://downloads.apache.org/ant/binaries/apache-ant-1.9.15-bin.zip --output ant9.zip
 
     - name: unzip ant 9
-      run: unzip ant9.zip
+      run: unzip ant9.zip && pwd
 
+    - name: ant home check 1
+      run: echo $ANT_HOME && ls $ANT_HOME
 #     - name: update ant home
 #       run:  export ANT_HOME=/home/runner/apache-ant-1.9.15
 
     - name: update ant version to 1.9.15
-      run:  sudo mv apache-ant-1.9.15 /opt/ant
+      run:  mv apache-ant-1.9.15 /opt/ant
+
+    - name: ant home check 2
+      run: echo $ANT_HOME && ls $ANT_HOME
 
     - name: build Ant
       run: ant -version
