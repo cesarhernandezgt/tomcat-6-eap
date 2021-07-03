@@ -58,14 +58,23 @@ jobs:
       run: echo '/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/TEST-org.apache.catalina.tribes.group.interceptors.TestNonBlockingCoordinator.BIO.txt':'  Caused an ERROR' > known_errors.txt
 
 
-    - name: obtained_result
-      run: grep 'Caused an ERROR' /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/* > result.txt
+    - name: obtained_error_result
+      run: grep 'Caused an ERROR' /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/* > error_result.txt | true
+      
+    - name: obtained_failed_result
+      run: grep 'FAILED' /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/* > failed_result.txt | true
+    
+    - name: print_error
+      run: cat error_result.txt
+      
+    - name: print_failed
+      run: cat failed_result.txt 
  
 #     - name: filter_obtained_result
 #       run: sed 's;:;-:' result.txt
       
     - name: final_status
-      run: diff result.txt known_errors.txt
+      run: diff error_result.txt known_errors.txt
 #     - name: ant_collect_results
 #       run: grep "Caused an ERROR" output/build/logs/*
       
