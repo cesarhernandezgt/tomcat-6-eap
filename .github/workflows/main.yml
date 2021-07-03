@@ -55,14 +55,14 @@ jobs:
 #           core.setFailed('Coverage test below tolerance')
 
     - name: expected_result
-      run: echo '/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/TEST-org.apache.catalina.tribes.group.interceptors.TestNonBlockingCoordinator.BIO.txt- Caused an ERROR' > known_errors.txt
+      run: echo '/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/TEST-org.apache.catalina.tribes.group.interceptors.TestNonBlockingCoordinator.BIO.txt':'  Caused an ERROR' > known_errors.txt
 
 
     - name: obtained_result
       run: grep 'Caused an ERROR' /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/* > result.txt
  
-    - name: filter_obtained_result
-      run: sed 's;:;-:' result.txt
+#     - name: filter_obtained_result
+#       run: sed 's;:;-:' result.txt
       
     - name: final_status
       run: diff result.txt known_errors.txt
