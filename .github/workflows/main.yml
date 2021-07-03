@@ -38,6 +38,9 @@ jobs:
     - name: ant_build
       run: ant
 
+    - name: obtained_result
+      run: grep 'Caused an ERROR' /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/* > result.txt
+
     - name: ant_test
 #       id: ante_test_result
       run: ant test | true
@@ -58,8 +61,6 @@ jobs:
     - name: expected_result
       run: echo 'output/build/logs/TEST-org.apache.catalina.tribes.group.interceptors.TestNonBlockingCoordinator.NIO.txt:Caused an ERROR' > known_errors.txt
 
-    - name: obtained_result
-      run: grep "Caused an ERROR" output/build/logs/* > result.txt
 
     - name: final_status
       run: diff result.txt known_errors.txt
