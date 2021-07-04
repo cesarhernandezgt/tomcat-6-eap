@@ -81,7 +81,7 @@ jobs:
 #       run: echo '/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/TEST-org.apache.catalina.tribes.group.interceptors.TestOrderInterceptor.BIO.txt':'  FAILED' > known_failed.txt && echo '/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/TEST-org.apache.coyote.http11.TestInternalInputBuffer.NIO.txt':'  FAILED' >> known_failed.txt
 
     - name: expected_failed_result
-      run: echo '/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/TEST-org.apache.coyote.http11.TestInternalInputBuffer.NIO.txt':'FAILED' >> known_failed.txt
+      run: echo '/home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/TEST-org.apache.coyote.http11.TestInternalInputBuffer.NIO.txt':'	FAILED' >> known_failed.txt
       
 
 #     - name: filter_obtained_result
