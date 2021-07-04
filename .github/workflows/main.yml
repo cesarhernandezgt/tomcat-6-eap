@@ -46,6 +46,8 @@ jobs:
 
     - name: ant_test
       run: ant test | true
+      env:
+          ANT_OPTS: -Xmx2G -XX:MaxPermSize=512m
     
 #     - if: failure()
 #       run: grep "Caused an ERROR" output/build/logs/*
