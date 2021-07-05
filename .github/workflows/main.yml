@@ -38,29 +38,10 @@ jobs:
     - name: ant_build
       run: ant
 
-    - name: boots_ant_memory
-      run:  export ANT_OPTS="-Xmx2G -XX:MaxPermSize=512m"
-
-    - name: test_boots_ant_memory
-      run:  echo $ANT_OPTS
-
     - name: ant_test
       run: ant test | true
       env:
           ANT_OPTS: -Xmx2G -XX:MaxPermSize=512m
-    
-#     - if: failure()
-#       run: grep "Caused an ERROR" output/build/logs/*
-      
-#     - if: success()
-#       run: grep "Caused an ERROR" output/build/logs/*  
-    
-#     - name: Check coverage tolerance
-#       if: ${{ steps.ante_test_result.outputs.lineRate < 0.9 }}
-#       uses: actions/github-script@v3
-#       with:
-#         script: |
-#           core.setFailed('Coverage test below tolerance')
 
     - name: obtained_error_result
       run: grep 'Caused an ERROR' /home/runner/work/TOMCAT_6_0_53-TT/TOMCAT_6_0_53-TT/output/build/logs/* > error_result.txt | true
@@ -74,11 +55,8 @@ jobs:
     - name: print_failed
       run: cat failed_result.txt 
  
-    - name: expected_error_result
-      run: touch known_errors.txt
-      
-    - name: expected_failed_result
-      run: touch known_failed.txt
+    - name: expected_error_and_failed_result
+      run: touch known_errors.txt && touch known_failed.txt
         
     - name: remove_known_error_1
       run: sed -i.bak '/TEST-org.apache.catalina.tribes.group.interceptors.TestNonBlockingCoordinator.BIO.txt/d' error_result.txt | true
@@ -97,6 +75,4 @@ jobs:
       
     - name: final_status
       run: diff failed_result.txt known_failed.txt && diff error_result.txt known_errors.txt
-#     - name: ant_collect_results
-#       run: grep "Caused an ERROR" output/build/logs/*
       
