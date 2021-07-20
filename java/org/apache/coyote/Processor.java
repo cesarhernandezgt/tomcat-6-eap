@@ -17,29 +17,53 @@
 
 package org.apache.coyote;
 
-import java.io.InputStream;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.util.concurrent.Executor;
+
+//import org.apache.coyote.http11.upgrade.servlet31.HttpUpgradeHandler;
+import org.apache.tomcat.util.net.AbstractEndpoint.Handler.SocketState;
+import org.apache.tomcat.util.net.SSLSupport;
+import org.apache.tomcat.util.net.SocketStatus;
+import org.apache.tomcat.util.net.SocketWrapper;
 
 
 /**
- * Processor.
- *
- * Not really used, should be deprecated. 
- *
- * @author Remy Maucherat
+ * Common interface for processors of all protocols.
  */
-public interface Processor {
+public interface Processor<S> {
+    Executor getExecutor();
 
+    SocketState process(SocketWrapper<S> socketWrapper) throws IOException;
 
-    public void setAdapter(Adapter adapter);
+    SocketState event(SocketStatus status) throws IOException;
 
+    SocketState asyncDispatch(SocketStatus status);
+    SocketState asyncPostProcess();
 
-    public Adapter getAdapter();
+//    /**
+//     * @deprecated  Will be removed in Tomcat 8.0.x.
+//     */
+//    @Deprecated
+//    org.apache.coyote.http11.upgrade.UpgradeInbound getUpgradeInbound();
+//
+//    /**
+//     * @deprecated  Will be removed in Tomcat 8.0.x.
+//     */
+//    @Deprecated
+//    SocketState upgradeDispatch() throws IOException;
+//
+//    HttpUpgradeHandler getHttpUpgradeHandler();
+    SocketState upgradeDispatch(SocketStatus status) throws IOException;
 
+    void errorDispatch();
 
-    public void process(InputStream input, OutputStream output)
-        throws IOException;
+    boolean isComet();
+    boolean isAsync();
+    boolean isUpgrade();
 
+    Request getRequest();
 
+    void recycle(boolean socketClosing);
+
+    void setSslSupport(SSLSupport sslSupport);
 }

@@ -337,6 +337,13 @@ public class AprEndpoint extends AbstractEndpoint {
     public void setUseComet(boolean useComet) { this.useComet = useComet; }
     public boolean getUseComet() { return useComet; }
 
+    @Override public boolean getUseCometTimeout() {
+        return false;
+    }
+
+    @Override public boolean getUsePolling() {
+        return false;
+    }
 
     /**
      * Acceptor thread count.
@@ -928,6 +935,9 @@ public class AprEndpoint extends AbstractEndpoint {
         }
     }
 
+    @Override protected AbstractEndpoint.Acceptor createAcceptor() {
+        return null;
+    }
 
     /**
      * Pause the endpoint, which will make it stop accepting new sockets.
@@ -1042,6 +1052,9 @@ public class AprEndpoint extends AbstractEndpoint {
         initialized = false;
     }
 
+    @Override protected Log getLog() {
+        return null;
+    }
 
     // ------------------------------------------------------ Protected Methods
 
@@ -1102,6 +1115,25 @@ public class AprEndpoint extends AbstractEndpoint {
         }
     }
 
+    @Override public void processSocketAsync(SocketWrapper socketWrapper, SocketStatus socketStatus) {
+
+    }
+
+    @Override public void bind() throws Exception {
+
+    }
+
+    @Override public void unbind() throws Exception {
+
+    }
+
+    @Override public void startInternal() throws Exception {
+
+    }
+
+    @Override public void stopInternal() throws Exception {
+
+    }
 
     /**
      * Process the specified connection.
@@ -1581,7 +1613,7 @@ public class AprEndpoint extends AbstractEndpoint {
                             // Check for failed sockets and hand this socket off to a worker
                             if (((desc[n*2] & Poll.APR_POLLHUP) == Poll.APR_POLLHUP)
                                     || ((desc[n*2] & Poll.APR_POLLERR) == Poll.APR_POLLERR)
-                                    || (comet && (!processSocket(desc[n*2+1], SocketStatus.OPEN)))
+                                    || (comet && (!processSocket(desc[n*2+1], SocketStatus.OPEN_READ)))
                                     || (!comet && (!processSocket(desc[n*2+1])))) {
                                 // Close socket and clear pool
                                 if (comet) {

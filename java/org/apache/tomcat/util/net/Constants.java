@@ -14,14 +14,20 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
 package org.apache.tomcat.util.net;
 
-/**
- * Someone, please change the enum name. 
- * 
- * @author remm
- */
-public enum SocketStatus {
-    OPEN_READ, OPEN_WRITE, STOP, TIMEOUT, DISCONNECT, ERROR, CLOSE_NOW
+public class Constants {
+
+    /**
+     * Name of the system property containing
+     * the tomcat instance installation path
+     */
+    public static final String CATALINA_BASE_PROP = "catalina.base";
+
+
+    /**
+     * Has security been turned on?
+     */
+    public static final boolean IS_SECURITY_ENABLED =
+            (System.getSecurityManager() != null);
 }

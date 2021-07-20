@@ -14,14 +14,22 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
+package org.apache.coyote;
 
-package org.apache.tomcat.util.net;
+public class ContainerThreadMarker {
 
-/**
- * Someone, please change the enum name. 
- * 
- * @author remm
- */
-public enum SocketStatus {
-    OPEN_READ, OPEN_WRITE, STOP, TIMEOUT, DISCONNECT, ERROR, CLOSE_NOW
+    private static final ThreadLocal<Boolean> marker = new ThreadLocal<Boolean>();
+
+    public static boolean isContainerThread() {
+        Boolean flag = marker.get();
+        if (flag == null) {
+            return false;
+        } else {
+            return flag.booleanValue();
+        }
+    }
+
+    public static void markAsContainerThread() {
+        marker.set(Boolean.TRUE);
+    }
 }

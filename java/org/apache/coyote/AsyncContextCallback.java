@@ -14,14 +14,15 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-
-package org.apache.tomcat.util.net;
+package org.apache.coyote;
 
 /**
- * Someone, please change the enum name. 
- * 
- * @author remm
+ * Provides a mechanism for the Coyote connectors to signal to a
+ * {@link javax.servlet.AsyncContext} implementation that an action, such as
+ * firing event listeners needs to be taken. It is implemented in this manner
+ * so that the org.apache.coyote package does not have a dependency on the
+ * org.apache.coyote package.  
  */
-public enum SocketStatus {
-    OPEN_READ, OPEN_WRITE, STOP, TIMEOUT, DISCONNECT, ERROR, CLOSE_NOW
+public interface AsyncContextCallback {
+    public void fireOnComplete();
 }

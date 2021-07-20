@@ -21,17 +21,14 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
-import org.apache.coyote.ActionCode;
-import org.apache.coyote.ActionHook;
-import org.apache.coyote.Adapter;
-import org.apache.coyote.Request;
-import org.apache.coyote.RequestInfo;
-import org.apache.coyote.Response;
+import org.apache.coyote.*;
 import org.apache.coyote.http11.filters.BufferedInputFilter;
 import org.apache.coyote.http11.filters.ChunkedInputFilter;
 import org.apache.coyote.http11.filters.ChunkedOutputFilter;
@@ -47,8 +44,11 @@ import org.apache.tomcat.util.buf.HexUtils;
 import org.apache.tomcat.util.buf.MessageBytes;
 import org.apache.tomcat.util.http.FastHttpDateFormat;
 import org.apache.tomcat.util.http.MimeHeaders;
+import org.apache.tomcat.util.http.parser.TokenList;
 import org.apache.tomcat.util.net.JIoEndpoint;
 import org.apache.tomcat.util.net.SSLSupport;
+import org.apache.tomcat.util.net.SocketStatus;
+import org.apache.tomcat.util.net.SocketWrapper;
 import org.apache.tomcat.util.res.StringManager;
 
 
@@ -65,6 +65,14 @@ public class Http11Processor implements ActionHook {
      */
     protected static org.apache.juli.logging.Log log
         = org.apache.juli.logging.LogFactory.getLog(Http11Processor.class);
+
+    /**
+     * Error state for the request/response currently being processed.
+     */
+    private ErrorState errorState = ErrorState.NONE;
+
+
+    protected SocketWrapper<?> socketWrapper = null;
 
     /**
      * The string manager for this package.
@@ -1335,25 +1343,20 @@ public class Http11Processor implements ActionHook {
 
         // Parse transfer-encoding header
         MessageBytes transferEncodingValueMB = null;
-        if (!http09) {
+        if (http11) {
             transferEncodingValueMB = headers.getValue("transfer-encoding");
         }
         if (transferEncodingValueMB != null) {
-            String transferEncodingValue = transferEncodingValueMB.toString();
-            // Parse the comma separated list. "identity" codings are ignored
-            int startPos = 0;
-            int commaPos = transferEncodingValue.indexOf(',');
-            String encodingName = null;
-            while (commaPos != -1) {
-                encodingName = transferEncodingValue.substring(
-                        startPos, commaPos).toLowerCase(Locale.ENGLISH).trim();
-                addInputFilter(inputFilters, encodingName);
-                startPos = commaPos + 1;
-                commaPos = transferEncodingValue.indexOf(',', startPos);
+            List<String> encodingNames = new ArrayList<String>();
+            if (TokenList.parseTokenList(headers.values("transfer-encoding"), encodingNames)) {
+                for (String encodingName : encodingNames) {
+                    // "identity" codings are ignored
+                    addInputFilter(inputFilters, encodingName);
+                }
+            } else {
+                // Invalid transfer encoding
+                badRequest("http11processor.request.invalidTransferEncoding");
             }
-            encodingName = transferEncodingValue.substring(
-                    startPos).toLowerCase(Locale.ENGLISH).trim();
-            addInputFilter(inputFilters, encodingName);
         }
 
 
@@ -1404,6 +1407,14 @@ public class Http11Processor implements ActionHook {
         }
     }
 
+
+    private void badRequest(String errorKey) {
+        response.setStatus(400);
+        setErrorState(ErrorState.CLOSE_CLEAN, null);
+        if (log.isDebugEnabled()) {
+            log.debug(sm.getString(errorKey));
+        }
+    }
 
     /**
      * Parse host.
@@ -1764,6 +1775,41 @@ public class Http11Processor implements ActionHook {
 //    }
 
     /**
+     * Set the socket wrapper being used.
+     */
+    protected final void setSocketWrapper(SocketWrapper<?> socketWrapper) {
+        this.socketWrapper = socketWrapper;
+    }
+
+
+    /**
+     * Get the socket wrapper being used.
+     */
+    protected final SocketWrapper<?> getSocketWrapper() {
+        return socketWrapper;
+    }
+
+    /**
+     * Update the current error state to the new error state if the new error
+     * state is more severe than the current error state.
+     */
+    protected void setErrorState(ErrorState errorState, Throwable t) {
+        boolean blockIo = this.errorState.isIoAllowed() && !errorState.isIoAllowed();
+        this.errorState = this.errorState.getMostSevere(errorState);
+        if (blockIo && !ContainerThreadMarker.isContainerThread()) {
+            // The error occurred on a non-container thread which means not all
+            // of the necessary clean-up will have been completed. Dispatch to
+            // a container thread to do the clean-up. Need to do it this way to
+            // ensure that all the necessary clean-up is performed.
+            if (response.getStatus() < 400) {
+                response.setStatus(500);
+            }
+            log.info(sm.getString("abstractProcessor.nonContainerThreadError"), t);
+            endpoint.processSocketAsync(socketWrapper, SocketStatus.CLOSE_NOW);
+        }
+    }
+
+    /**
      * Add an input filter to the current request. If the encoding is not
      * supported, a 501 response will be returned to the client.
      */
@@ -1779,7 +1825,7 @@ public class Http11Processor implements ActionHook {
             /**
              * PENDING MIGRATE
              */
-            //setErrorState(ErrorState.CLOSE_CLEAN, null);
+            setErrorState(ErrorState.CLOSE_CLEAN, null);
 
             if (log.isDebugEnabled()) {
                 log.debug(sm.getString("http11processor.request.prepare") +

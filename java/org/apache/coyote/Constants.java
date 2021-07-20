@@ -32,6 +32,7 @@ public final class Constants {
 
     // -------------------------------------------------------------- Constants
 
+    public static final String Package = "org.apache.coyote";
 
     public static final String DEFAULT_CHARACTER_ENCODING="ISO-8859-1";
 

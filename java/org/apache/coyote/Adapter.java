@@ -51,4 +51,6 @@ public interface Adapter {
             throws Exception;
 
     public void log(Request req, Response res, long time);
+
+    public void errorDispatch(Request request, Response response);
 }

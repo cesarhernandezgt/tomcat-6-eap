@@ -416,6 +416,10 @@ public class NioEndpoint extends AbstractEndpoint {
     public void setThreadPriority(int threadPriority) { this.threadPriority = threadPriority; }
     public int getThreadPriority() { return threadPriority; }
 
+    @Override protected boolean getDeferAccept() {
+        return false;
+    }
+
     /**
      * Priority of the acceptor threads.
      */
@@ -514,6 +518,13 @@ public class NioEndpoint extends AbstractEndpoint {
     public void setUseComet(boolean useComet) { this.useComet = useComet; }
     public boolean getUseComet() { return useComet; }
 
+    @Override public boolean getUseCometTimeout() {
+        return false;
+    }
+
+    @Override public boolean getUsePolling() {
+        return false;
+    }
 
     /**
      * Acceptor thread count.
@@ -589,6 +600,10 @@ public class NioEndpoint extends AbstractEndpoint {
             log.warn("configured file:["+path+"] does not exist.");
         }
         return path;
+    }
+
+    @Override protected Log getLog() {
+        return null;
     }
 
     public String defaultIfNull(String val, String defaultValue) {
@@ -668,11 +683,11 @@ public class NioEndpoint extends AbstractEndpoint {
     }
 
     protected int sessionCacheSize = 0;
-    public int getSessionCacheSize() { return sessionCacheSize;}
+    public String getSessionCacheSize() { return String.valueOf(sessionCacheSize);}
     public void setSessionCacheSize(int i) { sessionCacheSize = i;}
 
     protected int sessionTimeout = 86400;
-    public int getSessionTimeout() { return sessionTimeout;}
+    public String getSessionTimeout() { return String.valueOf(sessionTimeout);}
     public void setSessionTimeout(int i) { sessionTimeout = i;}
 
     /**
@@ -963,6 +978,9 @@ public class NioEndpoint extends AbstractEndpoint {
         }
     }
 
+    @Override protected AbstractEndpoint.Acceptor createAcceptor() {
+        return null;
+    }
 
     /**
      * Pause the endpoint, which will make it stop accepting new sockets.
@@ -1123,6 +1141,25 @@ public class NioEndpoint extends AbstractEndpoint {
         }
     }
 
+    @Override public void processSocketAsync(SocketWrapper socketWrapper, SocketStatus socketStatus) {
+
+    }
+
+    @Override public void bind() throws Exception {
+
+    }
+
+    @Override public void unbind() throws Exception {
+
+    }
+
+    @Override public void startInternal() throws Exception {
+
+    }
+
+    @Override public void stopInternal() throws Exception {
+
+    }
 
     /**
      * Process the specified connection.
@@ -1750,11 +1787,11 @@ public class NioEndpoint extends AbstractEndpoint {
                                 //read goes before write
                                 if (sk.isReadable()) {
                                     //read notification
-                                    if (!processSocket(channel, SocketStatus.OPEN))
+                                    if (!processSocket(channel, SocketStatus.OPEN_READ))
                                         processSocket(channel, SocketStatus.DISCONNECT);
                                 } else {
                                     //future placement of a WRITE notif
-                                    if (!processSocket(channel, SocketStatus.OPEN))
+                                    if (!processSocket(channel, SocketStatus.OPEN_WRITE))
                                         processSocket(channel, SocketStatus.DISCONNECT);
                                 }
                             } else {
@@ -1931,7 +1968,7 @@ public class NioEndpoint extends AbstractEndpoint {
                         ka.setCometNotify(false);
                         reg(key,ka,0);//avoid multiple calls, this gets reregistered after invokation
                         //if (!processSocket(ka.getChannel(), SocketStatus.OPEN_CALLBACK)) processSocket(ka.getChannel(), SocketStatus.DISCONNECT);
-                        if (!processSocket(ka.getChannel(), SocketStatus.OPEN)) processSocket(ka.getChannel(), SocketStatus.DISCONNECT);
+                        if (!processSocket(ka.getChannel(), SocketStatus.OPEN_READ)) processSocket(ka.getChannel(), SocketStatus.DISCONNECT);
                     }else if ((ka.interestOps()&SelectionKey.OP_READ) == SelectionKey.OP_READ ||
                     		  (ka.interestOps()&SelectionKey.OP_WRITE) == SelectionKey.OP_WRITE) {
                         //only timeout sockets that we are waiting for a read from - or write (send file)

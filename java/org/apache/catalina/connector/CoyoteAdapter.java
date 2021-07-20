@@ -143,7 +143,7 @@ public class CoyoteAdapter implements Adapter {
             boolean error = false;
             boolean read = false;
             try {
-                if (status == SocketStatus.OPEN) {
+            if (status == SocketStatus.OPEN_READ) {
                     if (response.isClosed()) {
                         // The event has been closed asynchronously, so call end instead of
                         // read to cleanup the pipeline
@@ -206,7 +206,7 @@ public class CoyoteAdapter implements Adapter {
                     connector.getContainer().getPipeline().getFirst().event(request, response, request.getEvent());
                 }
                 if (response.isClosed() || !request.isComet()) {
-                    if (status==SocketStatus.OPEN) {
+                    if (status==SocketStatus.OPEN_READ) {
                         //CometEvent.close was called during an event.
                         request.getEvent().setEventType(CometEvent.EventType.END);
                         request.getEvent().setEventSubType(null);
@@ -296,7 +296,7 @@ public class CoyoteAdapter implements Adapter {
                     if (!response.isClosed() && !response.isError()) {
                         if (request.getAvailable() || (request.getContentLength() > 0 && (!request.isParametersParsed()))) {
                             // Invoke a read event right away if there are available bytes
-                            if (event(req, res, SocketStatus.OPEN)) {
+                            if (event(req, res, SocketStatus.OPEN_READ)) {
                                 comet = true;
                                 res.action(ActionCode.ACTION_COMET_BEGIN, null);
                             }
@@ -336,6 +336,32 @@ public class CoyoteAdapter implements Adapter {
 
     }
 
+    @Override
+    public void errorDispatch(org.apache.coyote.Request req,
+                              org.apache.coyote.Response res) {
+        Request request = (Request) req.getNote(ADAPTER_NOTES);
+        Response response = (Response) res.getNote(ADAPTER_NOTES);
+
+        if (request != null && request.getMappingData().context != null) {
+            ((Context) request.getMappingData().context).logAccess(
+                    request, response,
+                    System.currentTimeMillis() - req.getStartTime(),
+                    false);
+        } else {
+            log(req, res, System.currentTimeMillis() - req.getStartTime());
+        }
+
+        if (request != null) {
+            request.recycle();
+        }
+
+        if (response != null) {
+            response.recycle();
+        }
+
+        res.recycle();
+        res.recycle();
+    }
 
     public void log(org.apache.coyote.Request req,
             org.apache.coyote.Response res, long time) {
