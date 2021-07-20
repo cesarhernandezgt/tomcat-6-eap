@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Locale;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
@@ -1296,10 +1297,47 @@ public class Http11Processor implements ActionHook {
         // Input filter setup
         InputFilter[] inputFilters = inputBuffer.getFilters();
 
+//        // Parse transfer-encoding header
+//        MessageBytes transferEncodingValueMB = null;
+//        if (http11)
+//            transferEncodingValueMB = headers.getValue("transfer-encoding");
+//        if (transferEncodingValueMB != null) {
+//            String transferEncodingValue = transferEncodingValueMB.toString();
+//            // Parse the comma separated list. "identity" codings are ignored
+//            int startPos = 0;
+//            int commaPos = transferEncodingValue.indexOf(',');
+//            String encodingName = null;
+//            while (commaPos != -1) {
+//                encodingName = transferEncodingValue.substring
+//                    (startPos, commaPos).toLowerCase().trim();
+//                if (!addInputFilter(inputFilters, encodingName)) {
+//                    // Unsupported transfer encoding
+//                    error = true;
+//                    // 501 - Unimplemented
+//                    response.setStatus(501);
+//                }
+//                startPos = commaPos + 1;
+//                commaPos = transferEncodingValue.indexOf(',', startPos);
+//            }
+//            encodingName = transferEncodingValue.substring(startPos)
+//                .toLowerCase().trim();
+//            if (!addInputFilter(inputFilters, encodingName)) {
+//                // Unsupported transfer encoding
+//                error = true;
+//                // 501 - Unimplemented
+//                if (log.isDebugEnabled()) {
+//                    log.debug(sm.getString("http11processor.request.prepare")+
+//                              " Unsupported transfer encoding \""+encodingName+"\"");
+//                }
+//                response.setStatus(501);
+//            }
+//        }
+
         // Parse transfer-encoding header
         MessageBytes transferEncodingValueMB = null;
-        if (http11)
+        if (!http09) {
             transferEncodingValueMB = headers.getValue("transfer-encoding");
+        }
         if (transferEncodingValueMB != null) {
             String transferEncodingValue = transferEncodingValueMB.toString();
             // Parse the comma separated list. "identity" codings are ignored
@@ -1307,30 +1345,17 @@ public class Http11Processor implements ActionHook {
             int commaPos = transferEncodingValue.indexOf(',');
             String encodingName = null;
             while (commaPos != -1) {
-                encodingName = transferEncodingValue.substring
-                    (startPos, commaPos).toLowerCase().trim();
-                if (!addInputFilter(inputFilters, encodingName)) {
-                    // Unsupported transfer encoding
-                    error = true;
-                    // 501 - Unimplemented
-                    response.setStatus(501);
-                }
+                encodingName = transferEncodingValue.substring(
+                        startPos, commaPos).toLowerCase(Locale.ENGLISH).trim();
+                addInputFilter(inputFilters, encodingName);
                 startPos = commaPos + 1;
                 commaPos = transferEncodingValue.indexOf(',', startPos);
             }
-            encodingName = transferEncodingValue.substring(startPos)
-                .toLowerCase().trim();
-            if (!addInputFilter(inputFilters, encodingName)) {
-                // Unsupported transfer encoding
-                error = true;
-                // 501 - Unimplemented
-                if (log.isDebugEnabled()) {
-                    log.debug(sm.getString("http11processor.request.prepare")+
-                              " Unsupported transfer encoding \""+encodingName+"\"");
-                }
-                response.setStatus(501);
-            }
+            encodingName = transferEncodingValue.substring(
+                    startPos).toLowerCase(Locale.ENGLISH).trim();
+            addInputFilter(inputFilters, encodingName);
         }
+
 
         // Parse content-length header
         long contentLength = request.getContentLengthLong();
@@ -1700,31 +1725,88 @@ public class Http11Processor implements ActionHook {
     }
 
 
+//    /**
+//     * Add an input filter to the current request.
+//     *
+//     * @return false if the encoding was not found (which would mean it is
+//     * unsupported)
+//     */
+//    protected boolean addInputFilter(InputFilter[] inputFilters,
+//                                     String encodingName) {
+//
+//        if (contentDelimitation) {
+//            // Chunked has already been specified and it must be the final
+//            // encoding.
+//            // 400 - Bad request
+//            response.setStatus(400);
+//            //setErrorState(ErrorState.CLOSE_CLEAN, null);
+//            if (log.isDebugEnabled()) {
+//                log.debug(sm.getString("http11processor.request.prepare") +
+//                                  " Tranfer encoding lists chunked before [" + encodingName + "]");
+//            }
+//            return true;
+//        }
+//
+//        if (encodingName.equals("chunked")) {
+//            inputBuffer.addActiveFilter(inputFilters[Constants.CHUNKED_FILTER]);
+//            contentDelimitation = true;
+//        } else {
+//            for (int i = pluggableFilterIndex; i < inputFilters.length; i++) {
+//                if (inputFilters[i].getEncodingName()
+//                    .toString().equals(encodingName)) {
+//                    inputBuffer.addActiveFilter(inputFilters[i]);
+//                    return true;
+//                }
+//            }
+//            return false;
+//        }
+//        return true;
+//    }
+
     /**
-     * Add an input filter to the current request.
-     *
-     * @return false if the encoding was not found (which would mean it is
-     * unsupported)
+     * Add an input filter to the current request. If the encoding is not
+     * supported, a 501 response will be returned to the client.
      */
-    protected boolean addInputFilter(InputFilter[] inputFilters,
-                                     String encodingName) {
-        if (encodingName.equals("identity")) {
-            // Skip
-        } else if (encodingName.equals("chunked")) {
-            inputBuffer.addActiveFilter
-                (inputFilters[Constants.CHUNKED_FILTER]);
+    private void addInputFilter(InputFilter[] inputFilters,
+                                String encodingName) {
+
+        if (contentDelimitation) {
+            // Chunked has already been specified and it must be the final
+            // encoding.
+            // 400 - Bad request
+            response.setStatus(400);
+
+            /**
+             * PENDING MIGRATE
+             */
+            //setErrorState(ErrorState.CLOSE_CLEAN, null);
+
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("http11processor.request.prepare") +
+                                  " Tranfer encoding lists chunked before [" + encodingName + "]");
+            }
+            return;
+        }
+
+        if (encodingName.equals("chunked")) {
+            inputBuffer.addActiveFilter(inputFilters[Constants.CHUNKED_FILTER]);
             contentDelimitation = true;
         } else {
             for (int i = pluggableFilterIndex; i < inputFilters.length; i++) {
-                if (inputFilters[i].getEncodingName()
-                    .toString().equals(encodingName)) {
+                if (inputFilters[i].getEncodingName().toString().equals(encodingName)) {
                     inputBuffer.addActiveFilter(inputFilters[i]);
-                    return true;
+                    return;
                 }
             }
-            return false;
+            // Unsupported transfer encoding
+            // 501 - Unimplemented
+            response.setStatus(501);
+            error = true;
+            if (log.isDebugEnabled()) {
+                log.debug(sm.getString("http11processor.request.prepare") +
+                                       " Unsupported transfer encoding [" + encodingName + "]");
+            }
         }
-        return true;
     }
 
 

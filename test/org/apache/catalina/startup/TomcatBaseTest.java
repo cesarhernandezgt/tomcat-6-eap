@@ -40,16 +40,11 @@ import javax.servlet.http.HttpSession;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 
+import org.apache.catalina.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 
-import org.apache.catalina.Container;
-import org.apache.catalina.LifecycleException;
-import org.apache.catalina.Manager;
-import org.apache.catalina.Server;
-import org.apache.catalina.ServerFactory;
-import org.apache.catalina.Service;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.core.AprLifecycleListener;
 import org.apache.catalina.core.StandardServer;
@@ -91,6 +86,28 @@ public abstract class TomcatBaseTest extends LoggingBaseTest {
      */
     public boolean isAccessLogEnabled() {
         return accessLogEnabled;
+    }
+
+    /**
+     * Make the Tomcat instance preconfigured with test/webapp available to
+     * sub-classes.
+     * @param start   Should the Tomcat instance be started
+     *
+     * @return A Tomcat instance pre-configured with the web application located
+     *         at test/webapp
+     *
+     * @throws LifecycleException If a problem occurs while starting the
+     *                            instance
+     */
+    public Tomcat getTomcatInstanceTestWebapp(boolean start)
+            throws LifecycleException {
+        File appDir = new File("test/webapp");
+        Context ctx = tomcat.addWebapp(null, "/test", appDir.getAbsolutePath());
+
+        if (start) {
+            tomcat.start();
+        }
+        return tomcat;
     }
 
     @Before
